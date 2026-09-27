@@ -8,12 +8,17 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "numpy>=2.5.3",
     "pandas>=3.0.6",
+    "pillow>=12.3.0",
     "pyarrow>=25.0.1",
 ]
 
 [project.scripts]
 pet-breed-classification = "pet_breed_classification:main"
+data = "pet_breed_classification.data:make_splits"
+train = "pet_breed_classification.train:main"
+predict = "pet_breed_classification.predict:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
@@ -22,4 +27,5 @@ build-backend = "uv_build"
 [dependency-groups]
 dev = [
     "dvc>=3.67.1",
+    "pytest>=9.1.1",
 ]
