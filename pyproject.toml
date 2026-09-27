@@ -7,7 +7,10 @@ authors = [
     { name = "alyalsayed", email = "alyalsayed56@yahoo.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "pandas>=3.0.6",
+    "pyarrow>=25.0.1",
+]
 
 [project.scripts]
 pet-breed-classification = "pet_breed_classification:main"
