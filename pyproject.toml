@@ -1,0 +1,22 @@
+[project]
+name = "pet-breed-classification"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "alyalsayed", email = "alyalsayed56@yahoo.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[project.scripts]
+pet-breed-classification = "pet_breed_classification:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "dvc>=3.67.1",
+]
