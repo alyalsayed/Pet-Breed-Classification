@@ -7,11 +7,14 @@ authors = [
     { name = "alyalsayed", email = "alyalsayed56@yahoo.com" }
 ]
 requires-python = ">=3.12"
+
 dependencies = [
     "numpy>=2.5.3",
     "pandas>=3.0.6",
     "pillow>=12.3.0",
     "pyarrow>=25.0.1",
+    "torch",
+    "torchvision",
 ]
 
 [project.scripts]
@@ -29,3 +32,12 @@ dev = [
     "dvc>=3.67.1",
     "pytest>=9.1.1",
 ]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchvision = { index = "pytorch" }
