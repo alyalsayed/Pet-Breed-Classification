@@ -1,24 +1,15 @@
 """
-Step 1 — Fix the split before anything else.
+Dataset download/loading and deterministic train/val/test splitting for the
+Pet Breed Classification project.
 
-Downloads Oxford-IIIT Pet (trainval + test) via torchvision, then carves a
-validation fold out of `trainval` using a fixed seed (see config.SPLIT_SEED),
-stratified by breed so every class is proportionally represented in both
-train and val.
-
-The official `test` split is only read here to record its image IDs — it is
-never touched otherwise, and stays untouched until the optimization/reporting
-phase later in the project.
-
-Outputs (committed to git / DVC, not just generated locally):
-    data/processed/splits/train.txt
-    data/processed/splits/val.txt
-    data/processed/splits/test.txt
-
-Each file contains one image_id per line (filename stem, e.g. "Abyssinian_100"),
-sorted alphabetically for stable diffs.
+Fix the split before anything else — this module only downloads the dataset
+and produces the split index files. Manifest generation and label-map
+generation live in manifest.py, which reads the split files this module
+writes.
 
 Run:
+    uv run data
+    # or directly:
     uv run python -m pet_breed_classification.data
 """
 
@@ -37,7 +28,10 @@ def _image_ids_and_labels(dataset: OxfordIIITPet) -> tuple[list[str], list[int]]
     torchvision does not expose filenames through __getitem__ (only PIL image +
     label), so we read its internal `_images` / `_labels` lists directly. This
     is the standard, documented workaround used across the ecosystem for this
-    dataset class.
+    dataset class. These torchvision labels are used only to stratify the
+    split below — they are NOT the label map used for training (that comes
+    from manifest.py, which builds its own sorted, committed label map
+    instead of trusting torchvision's internal ordering).
     """
     image_ids = [Path(p).stem for p in dataset._images]
     labels = list(dataset._labels)
