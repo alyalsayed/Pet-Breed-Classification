@@ -1,0 +1,29 @@
+stages:
+  make_splits:
+    cmd: uv run data
+    deps:
+      - src/pet_breed_classification/data.py
+      - src/pet_breed_classification/config.py
+      - data/raw/oxford-iiit-pet
+    outs:
+      - data/processed/splits/train.txt:
+          cache: false
+      - data/processed/splits/val.txt:
+          cache: false
+      - data/processed/splits/test.txt:
+          cache: false
+
+  build_manifest:
+    cmd: uv run manifest
+    deps:
+      - src/pet_breed_classification/manifest.py
+      - src/pet_breed_classification/config.py
+      - data/raw/oxford-iiit-pet
+      - data/processed/splits/train.txt
+      - data/processed/splits/val.txt
+      - data/processed/splits/test.txt
+    outs:
+      - data/processed/manifest.json:
+          cache: false
+      - data/processed/label_map.json:
+          cache: false
