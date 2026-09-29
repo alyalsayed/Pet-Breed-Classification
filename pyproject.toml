@@ -22,6 +22,7 @@ pet-breed-classification = "pet_breed_classification:main"
 data = "pet_breed_classification.data:make_splits"
 train = "pet_breed_classification.train:main"
 predict = "pet_breed_classification.predict:main"
+manifest = "pet_breed_classification.manifest:build_manifest"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

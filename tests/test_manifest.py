@@ -1,7 +1,6 @@
 """
-Validation tests for the Step 2 manifest + label map, per the README's
-Day 2 checklist:
-
+Validation tests for the manifest + label map
+checklist: 
     - every manifest path exists and opens
     - no image_id appears in two splits
     - the label map has exactly 37 entries and matches the committed reference
