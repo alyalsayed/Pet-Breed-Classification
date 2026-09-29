@@ -1,0 +1,68 @@
+schema: '2.0'
+stages:
+  make_splits:
+    cmd: uv run data
+    deps:
+    - path: data/raw/oxford-iiit-pet
+      hash: md5
+      md5: f24efadffa0d858ad2f599e2fb934b36.dir
+      size: 821045236
+      nfiles: 25864
+    - path: src/pet_breed_classification/config.py
+      hash: md5
+      md5: 11c5927fd1915a626df4e09223bfb946
+      size: 907
+    - path: src/pet_breed_classification/data.py
+      hash: md5
+      md5: 3d1998775f72398aafbe16307a940253
+      size: 4032
+    outs:
+    - path: data/processed/splits/test.txt
+      hash: md5
+      md5: 9bc0a4207bfef234b5d00c97f736998b
+      size: 57634
+    - path: data/processed/splits/train.txt
+      hash: md5
+      md5: 559b341c0da568e4c4296b136c13b201
+      size: 51898
+    - path: data/processed/splits/val.txt
+      hash: md5
+      md5: 402152f63ff98e9469e3b9daea525eaa
+      size: 9119
+  build_manifest:
+    cmd: uv run manifest
+    deps:
+    - path: data/processed/splits/test.txt
+      hash: md5
+      md5: 9bc0a4207bfef234b5d00c97f736998b
+      size: 57634
+    - path: data/processed/splits/train.txt
+      hash: md5
+      md5: 559b341c0da568e4c4296b136c13b201
+      size: 51898
+    - path: data/processed/splits/val.txt
+      hash: md5
+      md5: 402152f63ff98e9469e3b9daea525eaa
+      size: 9119
+    - path: data/raw/oxford-iiit-pet
+      hash: md5
+      md5: f24efadffa0d858ad2f599e2fb934b36.dir
+      size: 821045236
+      nfiles: 25864
+    - path: src/pet_breed_classification/config.py
+      hash: md5
+      md5: 11c5927fd1915a626df4e09223bfb946
+      size: 907
+    - path: src/pet_breed_classification/manifest.py
+      hash: md5
+      md5: c11b5edc135b644cd166bb819ebf2402
+      size: 4577
+    outs:
+    - path: data/processed/label_map.json
+      hash: md5
+      md5: 58e6c100d28f74b99d1879cf6815876d
+      size: 794
+    - path: data/processed/manifest.json
+      hash: md5
+      md5: 9d6b0d23764823ca94d8e42122606a40
+      size: 2094770
