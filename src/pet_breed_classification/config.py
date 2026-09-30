@@ -20,6 +20,14 @@ SPLITS_DIR = Path("data/processed/splits")
 MANIFEST_PATH = Path("data/processed/manifest.json")
 LABEL_MAP_PATH = Path("data/processed/label_map.json")
 
+# --- Shared preprocessing (features.py) ---
+# Standard ImageNet-pretrained-backbone convention: resize the short side,
+# This must stay identical between training eval, validation, and serving.
+RESIZE_SIZE = 256
+IMAGE_SIZE = 224
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
+
 # --- Reproducibility contract ---
 SPLIT_SEED = 42
 VAL_FRACTION = 0.15
