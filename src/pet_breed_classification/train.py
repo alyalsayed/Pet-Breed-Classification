@@ -18,10 +18,10 @@ import mlflow
 import torch
 from torch import nn
 from . import config
-from .dataset import build_dataloaders
-from .model import build_model, get_device
-from .engine import train_one_epoch, validate
-from .checkpoint import save_checkpoint
+from .helpers.dataset import build_dataloaders
+from .helpers.model import build_model, get_device
+from .helpers.engine import train_one_epoch, validate
+from .helpers.checkpoint import save_checkpoint
 
 
 # ---------------------------------------------------------------------------

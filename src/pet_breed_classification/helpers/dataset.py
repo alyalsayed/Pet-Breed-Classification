@@ -6,8 +6,8 @@
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 
-from . import config, features
-from .manifest import load_split_records
+from .. import config, features
+from ..manifest import load_split_records
 
 
 # ---------------------------------------------------------------------------
