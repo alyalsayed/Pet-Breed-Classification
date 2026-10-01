@@ -1,5 +1,6 @@
 from .metrics import compute_top1_accuracy, compute_macro_f1, compute_ece
-
+import pet_breed_classification.config as config
+import torch
 # ---------------------------------------------------------------------------
 # Train / validate
 # ---------------------------------------------------------------------------

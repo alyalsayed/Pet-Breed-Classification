@@ -1,5 +1,8 @@
 
 from torchvision.models import ResNet50_Weights, resnet50
+import torch
+import torch.nn as nn
+import pet_breed_classification.config as config
 
 # ---------------------------------------------------------------------------
 # Device
