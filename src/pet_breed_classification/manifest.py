@@ -72,6 +72,17 @@ def build_label_map(breed_names: set[str]) -> dict[str, int]:
     return {breed: idx for idx, breed in enumerate(sorted(breed_names))}
 
 
+def load_split_records(split_name: str) -> list[dict]:
+    """Read manifest.json and return only the records for one split
+    ("train", "val", or "test"). Shared by train.py and corruptions.py so
+    the "read the manifest, filter by split" logic exists in exactly one
+    place.
+    """
+    with config.MANIFEST_PATH.open() as f:
+        manifest = json.load(f)
+    return [record for record in manifest if record["split"] == split_name]
+
+
 def build_manifest() -> None:
     species_by_id = _parse_species_by_image_id(config.ANNOTATIONS_LIST_PATH)
     split_by_id = _load_split_membership(config.SPLITS_DIR)
