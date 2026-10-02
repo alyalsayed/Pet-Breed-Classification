@@ -1,10 +1,11 @@
+
 import json
+
 import torch
-import torch.nn as nn
-import pet_breed_classification.config as config
-# ---------------------------------------------------------------------------
-# Checkpoint
-# ---------------------------------------------------------------------------
+from torch import nn
+
+from .. import config
+
 
 def save_checkpoint(model: nn.Module, backbone_name: str) -> tuple[str, str]:
     """Save model weights plus a sidecar JSON describing exactly what
@@ -29,3 +30,21 @@ def save_checkpoint(model: nn.Module, backbone_name: str) -> tuple[str, str]:
 
     return str(weights_path), str(transform_path)
 
+
+def load_checkpoint(model: nn.Module, backbone_name: str, device: torch.device) -> dict:
+    """Load saved weights into `model` (in place) and return the transform
+    metadata dict that was saved alongside them, so callers can confirm
+    what preprocessing the checkpoint expects.
+    """
+    weights_path = config.CHECKPOINT_DIR / f"{backbone_name}_best.pt"
+    transform_path = config.CHECKPOINT_DIR / f"{backbone_name}_best_transform.json"
+
+    state_dict = torch.load(weights_path, map_location=device)
+    model.load_state_dict(state_dict)
+    model.to(device)
+    model.eval()
+
+    with transform_path.open() as f:
+        transform_metadata = json.load(f)
+
+    return transform_metadata

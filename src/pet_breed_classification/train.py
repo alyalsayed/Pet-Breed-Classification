@@ -12,16 +12,19 @@ Run:
     uv run python -m pet_breed_classification.train
 """
 
-
-
 import mlflow
+import mlflow.pytorch
 import torch
 from torch import nn
+
 from . import config
-from .helpers.dataset import build_dataloaders
-from .helpers.model import build_model, get_device
-from .helpers.engine import train_one_epoch, validate
 from .helpers.checkpoint import save_checkpoint
+from .helpers.dataset import build_dataloaders
+from .helpers.engine import train_one_epoch, validate
+from .helpers.model import build_model, get_device
+
+MODEL_VERSION = "v1"
+DATASET_NAME = "oxford-iiit-pet"
 
 
 # ---------------------------------------------------------------------------
@@ -43,6 +46,14 @@ def main() -> None:
 
     mlflow.set_experiment(config.MLFLOW_EXPERIMENT_NAME)
     with mlflow.start_run():
+        # Tags make runs easy to find/filter in the MLflow UI later
+        mlflow.set_tags(
+            {
+                "model_version": MODEL_VERSION,
+                "dataset": DATASET_NAME,
+            }
+        )
+
         mlflow.log_params(
             {
                 "backbone": backbone_name,
@@ -50,6 +61,7 @@ def main() -> None:
                 "batch_size": config.BATCH_SIZE,
                 "num_epochs": config.NUM_EPOCHS,
                 "split_seed": config.SPLIT_SEED,
+                "num_classes": config.NUM_CLASSES,
             }
         )
 
@@ -72,9 +84,15 @@ def main() -> None:
 
             if val_metrics["val_top1"] > best_val_top1:
                 best_val_top1 = val_metrics["val_top1"]
+
+                # Keep the existing plain files (used by main.py / future
+                # serving code to load the model without needing MLflow).
                 weights_path, transform_path = save_checkpoint(model, backbone_name)
                 mlflow.log_artifact(weights_path)
                 mlflow.log_artifact(transform_path)
+
+                # Log the final model to MLflow's model registry (used by MLflow's serving stack).
+                mlflow.pytorch.log_model(model, artifact_path="model")
 
         mlflow.log_metric("best_val_top1", best_val_top1)
         print(f"Done. Best val_top1={best_val_top1:.4f}")
