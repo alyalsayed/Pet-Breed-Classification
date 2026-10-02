@@ -95,7 +95,12 @@ def main() -> None:
         load_checkpoint(model, backbone_name, device)
 
         example_input = torch.randn(1, 3, config.IMAGE_SIZE, config.IMAGE_SIZE, device=device)
-        mlflow.pytorch.log_model(model, name="model", input_example=example_input)
+        mlflow.pytorch.log_model(
+            model,
+            name="model",
+            serialization_format="pickle",
+            input_example=example_input,
+        )
 
         print(f"Done. Best val_top1={best_val_top1:.4f}")
 
