@@ -4,7 +4,7 @@ Centralized configuration for the Pet Breed Classification project.
 Single source of truth for filesystem paths and reproducibility constants.
 As the project grows, add new config values here rather than hardcoding
 them in individual modules — e.g. corruption-suite output paths (Day 3),
-training hyperparameters (Day 4+).
+training hyperparameters .
 """
 
 from pathlib import Path
@@ -42,10 +42,6 @@ SEVERITY_LEVELS = (1, 2, 3)
 CORRUPTIONS_DIR = Path("data/processed/corrupted")
 CORRUPTED_MANIFEST_PATH = Path("data/processed/corrupted_manifest.json")
 
-# Parameters per severity level (1=mild, 2=moderate, 3=severe). Severity 3
-# matches the handbook's named examples (JPEG quality 30, downscale to
-# 96x96); levels 1-2 are our own reasonable interpolation, since the
-# handbook only specifies one example value per corruption type.
 BLUR_RADIUS_BY_SEVERITY = {1: 1, 2: 2, 3: 4}
 BRIGHTNESS_UP_FACTOR_BY_SEVERITY = {1: 1.3, 2: 1.6, 3: 2.0}
 BRIGHTNESS_DOWN_FACTOR_BY_SEVERITY = {1: 0.7, 2: 0.5, 3: 0.3}
