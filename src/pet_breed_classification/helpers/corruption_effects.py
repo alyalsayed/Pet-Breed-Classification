@@ -11,7 +11,7 @@ Severity -> parameter values come from config.py, never hardcoded here.
 
 import io
 
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image, ImageEnhance, ImageFilter, ImageChops
 
 from pet_breed_classification import config
 
@@ -57,13 +57,23 @@ def apply_downscale_upscale(image: Image.Image, severity: int) -> Image.Image:
 
 
 def apply_motion_blur(image: Image.Image, severity: int) -> Image.Image:
-    """Simulates camera/subject motion during the shot, via a simple
-    horizontal averaging kernel (no extra dependency like OpenCV needed).
+    """Simulates camera/subject motion during the shot.
+
+    PIL's ImageFilter.Kernel only supports 3x3 or 5x5 kernels, so a long
+    1D motion kernel (5, 9, or 15 pixels) can't be expressed with it
+    directly. Instead, average several horizontally-shifted copies of the
+    image — same visual effect, no extra dependency (OpenCV/numpy) needed.
     """
     kernel_size = config.MOTION_BLUR_KERNEL_SIZE_BY_SEVERITY[severity]
-    kernel_values = [1 / kernel_size] * kernel_size
-    motion_kernel = ImageFilter.Kernel(size=(kernel_size, 1), kernel=kernel_values)
-    return image.filter(motion_kernel)
+    half = kernel_size // 2
+    offsets = list(range(-half, half + 1))  # e.g. [-2, -1, 0, 1, 2] for kernel_size=5
+
+    blurred = ImageChops.offset(image, offsets[0], 0)
+    for count, offset in enumerate(offsets[1:], start=2):
+        shifted = ImageChops.offset(image, offset, 0)
+        blurred = Image.blend(blurred, shifted, alpha=1 / count)
+
+    return blurred
 
 
 # Single registry every other module uses to iterate corruption types —
