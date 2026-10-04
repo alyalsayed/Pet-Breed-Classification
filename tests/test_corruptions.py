@@ -46,7 +46,7 @@ def test_blur_actually_changes_pixels(sample_image):
             pixels[x, y] = (255, 255, 255) if (x // 20 + y // 20) % 2 == 0 else (0, 0, 0)
 
     blurred = corruption_effects.apply_gaussian_blur(checker, severity=3)
-    assert list(blurred.getdata()) != list(checker.getdata())
+    assert (list(blurred.get_flattened_data()) != list(checker.get_flattened_data()))
 
 
 # ---------------------------------------------------------------------------
