@@ -10,8 +10,8 @@ stages:
       nfiles: 25864
     - path: src/pet_breed_classification/config.py
       hash: md5
-      md5: 11c5927fd1915a626df4e09223bfb946
-      size: 907
+      md5: a7b65cd87bc49fd9f31731de60e5928a
+      size: 1807
     - path: src/pet_breed_classification/data.py
       hash: md5
       md5: 3d1998775f72398aafbe16307a940253
@@ -51,12 +51,12 @@ stages:
       nfiles: 25864
     - path: src/pet_breed_classification/config.py
       hash: md5
-      md5: 11c5927fd1915a626df4e09223bfb946
-      size: 907
+      md5: a7b65cd87bc49fd9f31731de60e5928a
+      size: 1807
     - path: src/pet_breed_classification/manifest.py
       hash: md5
-      md5: c11b5edc135b644cd166bb819ebf2402
-      size: 4577
+      md5: 86bc385f6c6f715ab82a29964144c690
+      size: 5019
     outs:
     - path: data/processed/label_map.json
       hash: md5
@@ -66,3 +66,44 @@ stages:
       hash: md5
       md5: 9d6b0d23764823ca94d8e42122606a40
       size: 2094770
+  build_corruptions:
+    cmd: uv run corruptions
+    deps:
+    - path: data/processed/manifest.json
+      hash: md5
+      md5: 9d6b0d23764823ca94d8e42122606a40
+      size: 2094770
+    - path: data/processed/splits/test.txt
+      hash: md5
+      md5: 9bc0a4207bfef234b5d00c97f736998b
+      size: 57634
+    - path: src/pet_breed_classification/config.py
+      hash: md5
+      md5: a7b65cd87bc49fd9f31731de60e5928a
+      size: 1807
+    - path: src/pet_breed_classification/corruptions.py
+      hash: md5
+      md5: 8b287d9b6be3cdf1a5ff77a04d2e5882
+      size: 3559
+    - path: src/pet_breed_classification/features.py
+      hash: md5
+      md5: 9635df9637d1cdf2b28c42b0e3c64970
+      size: 1724
+    - path: src/pet_breed_classification/helpers/corruption_effects.py
+      hash: md5
+      md5: ffdadc28a0d3d660507083aa16dacde8
+      size: 3564
+    - path: src/pet_breed_classification/manifest.py
+      hash: md5
+      md5: 86bc385f6c6f715ab82a29964144c690
+      size: 5019
+    outs:
+    - path: data/processed/corrupted
+      hash: md5
+      md5: 36df662748c48b040326068cbd07c50b.dir
+      size: 3383849776
+      nfiles: 66042
+    - path: data/processed/corrupted_manifest.json
+      hash: md5
+      md5: d52cc346d64e73a398a4e30bb5bd5436
+      size: 20812610
