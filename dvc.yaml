@@ -27,3 +27,18 @@ stages:
           cache: false
       - data/processed/label_map.json:
           cache: false
+
+  build_corruptions:
+    cmd: uv run corruptions
+    deps:
+      - src/pet_breed_classification/corruptions.py
+      - src/pet_breed_classification/helpers/corruption_effects.py
+      - src/pet_breed_classification/features.py
+      - src/pet_breed_classification/config.py
+      - src/pet_breed_classification/manifest.py
+      - data/processed/manifest.json
+      - data/processed/splits/test.txt
+    outs:
+      - data/processed/corrupted
+      - data/processed/corrupted_manifest.json:
+          cache: false
