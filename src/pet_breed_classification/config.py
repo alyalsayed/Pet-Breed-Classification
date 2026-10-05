@@ -62,6 +62,10 @@ TEMPERATURE_NUM_STEPS = 200
 # --- Abstention threshold (helpers/selective.py) ---
 TARGET_SELECTIVE_ACCURACY = 0.95
 
+# --- Confusion matrix (helpers/confusion.py) ---
+CONFUSION_MATRIX_REPORT_PATH = Path("reports/confusion_matrix.png")
+TOP_CONFUSED_PAIRS_COUNT = 5
+
 # --- Reproducibility contract ---
 SPLIT_SEED = 42
 VAL_FRACTION = 0.15
