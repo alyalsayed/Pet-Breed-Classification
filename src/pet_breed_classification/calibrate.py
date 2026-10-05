@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 from . import config
 from .helpers.calibration import (
     collect_logits_and_labels,
+    confidences_and_correctness,
     ece_at_temperature,
     fit_temperature,
     reliability_diagram_data,
@@ -25,6 +26,7 @@ from .helpers.calibration import (
 from .helpers.checkpoint import load_checkpoint
 from .helpers.dataset import build_val_loader
 from .helpers.model import build_model, get_device
+from .helpers.selective import compute_selective_metrics, find_threshold_for_target_accuracy
 
 BACKBONE_NAME = "resnet50"
 
@@ -77,11 +79,25 @@ def main() -> None:
     plot_reliability_diagram(before_diagram, after_diagram)
     print(f"Saved reliability diagram to {config.CALIBRATION_REPORT_PATH}")
 
+    confidences, correct = confidences_and_correctness(logits, labels, temperature)
+    threshold = find_threshold_for_target_accuracy(
+        confidences, correct, target_accuracy=config.TARGET_SELECTIVE_ACCURACY
+    )
+    selective_metrics = compute_selective_metrics(confidences, correct, threshold)
+
+    print(f"\nAbstention threshold (target selective accuracy={config.TARGET_SELECTIVE_ACCURACY}):")
+    print(f"  threshold:           {selective_metrics['threshold']:.4f}")
+    print(f"  coverage:            {selective_metrics['coverage']:.4f}")
+    print(f"  selective_accuracy:  {selective_metrics['selective_accuracy']:.4f}")
+    print(f"  overall_accuracy:    {selective_metrics['overall_accuracy']:.4f}")
+
     results = {
         "backbone": BACKBONE_NAME,
         "temperature": temperature,
         "ece_before": ece_before,
         "ece_after": ece_after,
+        "target_selective_accuracy": config.TARGET_SELECTIVE_ACCURACY,
+        **selective_metrics,
     }
     config.CALIBRATION_RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     with config.CALIBRATION_RESULTS_PATH.open("w") as f:
