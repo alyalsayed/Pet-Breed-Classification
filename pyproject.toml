@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 
 dependencies = [
+    "matplotlib>=3.11.2",
     "mlflow>=3.16.1",
     "numpy>=2.5.3",
     "pandas>=3.0.6",
@@ -25,6 +26,7 @@ train = "pet_breed_classification.train:main"
 predict = "pet_breed_classification.predict:main"
 manifest = "pet_breed_classification.manifest:build_manifest"
 corruptions = "pet_breed_classification.corruptions:build_corruptions"
+calibrate = "pet_breed_classification.calibrate:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
