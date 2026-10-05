@@ -1,7 +1,6 @@
-
-# ---------------------------------------------------------------------------
-# Imports
-# ---------------------------------------------------------------------------
+"""
+Dataset and dataloader construction for training.
+"""
 
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -9,10 +8,6 @@ from torchvision import transforms
 from .. import config, features
 from ..manifest import load_split_records
 
-
-# ---------------------------------------------------------------------------
-# Data
-# ---------------------------------------------------------------------------
 
 class PetBreedDataset(Dataset):
     """Wraps a list of manifest records (already filtered to one split)."""
@@ -49,14 +44,16 @@ def build_train_transform() -> transforms.Compose:
     )
 
 
+def build_val_loader() -> DataLoader:
+    val_records = load_split_records("val")
+    val_ds = PetBreedDataset(val_records, features.get_eval_transform())
+    return DataLoader(val_ds, batch_size=config.BATCH_SIZE, shuffle=False)
+
+
 def build_dataloaders() -> tuple[DataLoader, DataLoader]:
     train_records = load_split_records("train")
-    val_records = load_split_records("val")
-
     train_ds = PetBreedDataset(train_records, build_train_transform())
-    val_ds = PetBreedDataset(val_records, features.get_eval_transform())
-
     train_loader = DataLoader(train_ds, batch_size=config.BATCH_SIZE, shuffle=True)
-    val_loader = DataLoader(val_ds, batch_size=config.BATCH_SIZE, shuffle=False)
-    return train_loader, val_loader
 
+    val_loader = build_val_loader()
+    return train_loader, val_loader
