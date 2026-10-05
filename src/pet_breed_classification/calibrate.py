@@ -3,7 +3,8 @@ Calibrate the trained model using temperature scaling, on the VALIDATION
 set only — never touches test, never retrains the model.
 
 Computes ECE before and after calibration, saves a reliability diagram,
-and saves the learned temperature + results to disk.
+fits an abstention threshold, builds a confusion matrix, and saves all
+results to disk.
 
 Run:
     uv run calibrate
@@ -14,6 +15,7 @@ Run:
 import json
 
 import matplotlib.pyplot as plt
+import torch
 
 from . import config
 from .helpers.calibration import (
@@ -24,9 +26,11 @@ from .helpers.calibration import (
     reliability_diagram_data,
 )
 from .helpers.checkpoint import load_checkpoint
+from .helpers.confusion import build_confusion_matrix, most_confused_pairs
 from .helpers.dataset import build_val_loader
 from .helpers.model import build_model, get_device
 from .helpers.selective import compute_selective_metrics, find_threshold_for_target_accuracy
+from .manifest import load_index_to_breed
 
 BACKBONE_NAME = "resnet50"
 
@@ -52,6 +56,30 @@ def plot_reliability_diagram(before: tuple[list[float], list[float]], after: tup
     fig.tight_layout()
     config.CALIBRATION_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(config.CALIBRATION_REPORT_PATH)
+    plt.close(fig)
+
+
+def plot_confusion_matrix(confusion_matrix: list[list[int]], breed_names: list[str]) -> None:
+    """Saves the full 37x37 confusion matrix as a heatmap. Breed names are
+    small on a 37-class axis, so this is meant as a visual/report artifact
+    (spotting bright off-diagonal cells), not for reading individual labels —
+    most_confused_pairs() is the readable version of the same data.
+    """
+    fig, ax = plt.subplots(figsize=(12, 12))
+    im = ax.imshow(confusion_matrix, cmap="viridis")
+
+    ax.set_xticks(range(len(breed_names)))
+    ax.set_yticks(range(len(breed_names)))
+    ax.set_xticklabels(breed_names, rotation=90, fontsize=6)
+    ax.set_yticklabels(breed_names, fontsize=6)
+    ax.set_xlabel("Predicted breed")
+    ax.set_ylabel("True breed")
+    ax.set_title("Validation set confusion matrix")
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+    fig.tight_layout()
+    config.CONFUSION_MATRIX_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(config.CONFUSION_MATRIX_REPORT_PATH)
     plt.close(fig)
 
 
@@ -91,6 +119,24 @@ def main() -> None:
     print(f"  selective_accuracy:  {selective_metrics['selective_accuracy']:.4f}")
     print(f"  overall_accuracy:    {selective_metrics['overall_accuracy']:.4f}")
 
+    # Confusion matrix — reuses the SAME logits/labels already computed
+    # above. Temperature scaling never changes argmax, so no new model
+    # inference is needed here.
+    index_to_breed = load_index_to_breed()
+    num_classes = len(index_to_breed)
+    predicted_labels = torch.argmax(logits, dim=1).tolist()
+    true_labels = labels.tolist()
+
+    confusion_matrix = build_confusion_matrix(true_labels, predicted_labels, num_classes)
+    breed_names = [index_to_breed[i] for i in range(num_classes)]
+    plot_confusion_matrix(confusion_matrix, breed_names)
+    print(f"Saved confusion matrix to {config.CONFUSION_MATRIX_REPORT_PATH}")
+
+    top_confused = most_confused_pairs(confusion_matrix, index_to_breed, config.TOP_CONFUSED_PAIRS_COUNT)
+    print(f"\nTop {config.TOP_CONFUSED_PAIRS_COUNT} most confused breed pairs (true -> predicted: count):")
+    for true_breed, predicted_breed, count in top_confused:
+        print(f"  {true_breed} -> {predicted_breed}: {count}")
+
     results = {
         "backbone": BACKBONE_NAME,
         "temperature": temperature,
@@ -98,11 +144,12 @@ def main() -> None:
         "ece_after": ece_after,
         "target_selective_accuracy": config.TARGET_SELECTIVE_ACCURACY,
         **selective_metrics,
+        "top_confused_pairs": [list(pair) for pair in top_confused],
     }
     config.CALIBRATION_RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
     with config.CALIBRATION_RESULTS_PATH.open("w") as f:
         json.dump(results, f, indent=2)
-    print(f"Saved calibration results to {config.CALIBRATION_RESULTS_PATH}")
+    print(f"\nSaved calibration results to {config.CALIBRATION_RESULTS_PATH}")
 
 
 if __name__ == "__main__":
