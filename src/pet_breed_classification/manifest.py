@@ -132,6 +132,13 @@ def build_manifest() -> None:
     print(f"Wrote manifest with {len(records)} records to {config.MANIFEST_PATH}")
     print(f"Wrote label map with {len(label_map)} breeds to {config.LABEL_MAP_PATH}")
 
+def load_index_to_breed() -> dict[int, str]:
+    """Invert label_map.json (breed -> index) into (index -> breed), so
+    callers can turn a predicted class index back into a breed name.
+    """
+    with config.LABEL_MAP_PATH.open() as f:
+        label_map = json.load(f)
+    return {index: breed for breed, index in label_map.items()}
 
 if __name__ == "__main__":
     build_manifest()

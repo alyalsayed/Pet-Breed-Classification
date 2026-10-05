@@ -12,26 +12,15 @@ Run:
     uv run python -m pet_breed_classification.main
 """
 
-import json
-
 import torch
 
-from . import config, features
+from . import features
 from .helpers.checkpoint import load_checkpoint
 from .helpers.model import build_model, get_device
-from .manifest import load_split_records
+from .manifest import load_index_to_breed, load_split_records
 
 MODEL_VERSION = "v1"
 BACKBONE_NAME = "resnet50"
-
-
-def load_index_to_breed() -> dict[int, str]:
-    """Invert label_map.json (breed -> index) into (index -> breed), so we
-    can turn the model's predicted class index back into a breed name.
-    """
-    with config.LABEL_MAP_PATH.open() as f:
-        label_map = json.load(f)
-    return {index: breed for breed, index in label_map.items()}
 
 
 def predict_single_image(model, transform, image_path, device) -> tuple[int, float]:
