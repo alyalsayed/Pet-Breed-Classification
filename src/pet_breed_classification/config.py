@@ -28,6 +28,8 @@ IMAGENET_STD = (0.229, 0.224, 0.225)
 
 # --- Training (train.py) ---
 SUPPORTED_BACKBONES = ("resnet50", "resnet18", "mobilenet_v3_small")
+MODEL_VERSION = "v1"
+DATASET_NAME = "oxford-iiit-pet"
 NUM_CLASSES = 37
 BATCH_SIZE = 32
 LEARNING_RATE = 1e-4

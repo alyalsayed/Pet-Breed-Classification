@@ -27,8 +27,7 @@ from .helpers.dataset import build_dataloaders
 from .helpers.engine import train_one_epoch, validate
 from .helpers.model import build_model, get_device
 
-MODEL_VERSION = "v1"
-DATASET_NAME = "oxford-iiit-pet"
+
 
 
 # ---------------------------------------------------------------------------
@@ -63,8 +62,8 @@ def main() -> None:
        
         mlflow.set_tags(
             {
-                "model_version": MODEL_VERSION,
-                "dataset": DATASET_NAME,
+                "model_version": config.MODEL_VERSION,
+                "dataset": config.DATASET_NAME,
             }
         )
 
