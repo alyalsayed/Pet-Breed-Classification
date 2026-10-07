@@ -8,11 +8,14 @@ results to disk.
 
 Run:
     uv run calibrate
+    uv run calibrate --checkpoint-dir models/candidate_masked-gnu-592
     # or directly:
     uv run python -m pet_breed_classification.calibrate
 """
 
+import argparse
 import json
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import torch
@@ -35,7 +38,11 @@ from .manifest import load_index_to_breed
 BACKBONE_NAME = "resnet50"
 
 
-def plot_reliability_diagram(before: tuple[list[float], list[float]], after: tuple[list[float], list[float]]) -> None:
+def plot_reliability_diagram(
+    before: tuple[list[float], list[float]],
+    after: tuple[list[float], list[float]],
+    output_path: Path,
+) -> None:
     """Saves a two-panel before/after reliability diagram. A perfectly
     calibrated model's points would lie exactly on the diagonal.
     """
@@ -54,12 +61,14 @@ def plot_reliability_diagram(before: tuple[list[float], list[float]], after: tup
         ax.legend()
 
     fig.tight_layout()
-    config.CALIBRATION_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(config.CALIBRATION_REPORT_PATH)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path)
     plt.close(fig)
 
 
-def plot_confusion_matrix(confusion_matrix: list[list[int]], breed_names: list[str]) -> None:
+def plot_confusion_matrix(
+    confusion_matrix: list[list[int]], breed_names: list[str], output_path: Path
+) -> None:
     """Saves the full 37x37 confusion matrix as a heatmap. Breed names are
     small on a 37-class axis, so this is meant as a visual/report artifact
     (spotting bright off-diagonal cells), not for reading individual labels —
@@ -78,17 +87,37 @@ def plot_confusion_matrix(confusion_matrix: list[list[int]], breed_names: list[s
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
     fig.tight_layout()
-    config.CONFUSION_MATRIX_REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(config.CONFUSION_MATRIX_REPORT_PATH)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path)
     plt.close(fig)
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        default=None,
+        help=(
+            "Directory containing <backbone>_best.pt / _transform.json. "
+            "Defaults to config.CHECKPOINT_DIR. Pass a candidate-specific "
+            "directory (e.g. models/candidate_masked-gnu-592) to calibrate "
+            "that exact checkpoint instead of the shared default."
+        ),
+    )
+    args = parser.parse_args()
+    checkpoint_dir = args.checkpoint_dir or config.CHECKPOINT_DIR
+
+    calibration_report_path = checkpoint_dir / config.CALIBRATION_REPORT_PATH.name
+    confusion_matrix_report_path = checkpoint_dir / config.CONFUSION_MATRIX_REPORT_PATH.name
+    calibration_results_path = checkpoint_dir / config.CALIBRATION_RESULTS_PATH.name
+
     device = get_device()
     print(f"Using device: {device}")
+    print(f"Checkpoint dir: {checkpoint_dir}")
 
-    model = build_model().to(device)
-    load_checkpoint(model, BACKBONE_NAME, device)
+    model = build_model(BACKBONE_NAME).to(device)
+    load_checkpoint(model, BACKBONE_NAME, device, checkpoint_dir=checkpoint_dir)
 
     val_loader = build_val_loader()
     logits, labels = collect_logits_and_labels(model, val_loader, device)
@@ -104,8 +133,8 @@ def main() -> None:
 
     before_diagram = reliability_diagram_data(logits, labels, temperature=1.0, num_bins=config.ECE_NUM_BINS)
     after_diagram = reliability_diagram_data(logits, labels, temperature=temperature, num_bins=config.ECE_NUM_BINS)
-    plot_reliability_diagram(before_diagram, after_diagram)
-    print(f"Saved reliability diagram to {config.CALIBRATION_REPORT_PATH}")
+    plot_reliability_diagram(before_diagram, after_diagram, calibration_report_path)
+    print(f"Saved reliability diagram to {calibration_report_path}")
 
     confidences, correct = confidences_and_correctness(logits, labels, temperature)
     threshold = find_threshold_for_target_accuracy(
@@ -119,9 +148,6 @@ def main() -> None:
     print(f"  selective_accuracy:  {selective_metrics['selective_accuracy']:.4f}")
     print(f"  overall_accuracy:    {selective_metrics['overall_accuracy']:.4f}")
 
-    # Confusion matrix — reuses the SAME logits/labels already computed
-    # above. Temperature scaling never changes argmax, so no new model
-    # inference is needed here.
     index_to_breed = load_index_to_breed()
     num_classes = len(index_to_breed)
     predicted_labels = torch.argmax(logits, dim=1).tolist()
@@ -129,8 +155,8 @@ def main() -> None:
 
     confusion_matrix = build_confusion_matrix(true_labels, predicted_labels, num_classes)
     breed_names = [index_to_breed[i] for i in range(num_classes)]
-    plot_confusion_matrix(confusion_matrix, breed_names)
-    print(f"Saved confusion matrix to {config.CONFUSION_MATRIX_REPORT_PATH}")
+    plot_confusion_matrix(confusion_matrix, breed_names, confusion_matrix_report_path)
+    print(f"Saved confusion matrix to {confusion_matrix_report_path}")
 
     top_confused = most_confused_pairs(confusion_matrix, index_to_breed, config.TOP_CONFUSED_PAIRS_COUNT)
     print(f"\nTop {config.TOP_CONFUSED_PAIRS_COUNT} most confused breed pairs (true -> predicted: count):")
@@ -146,10 +172,10 @@ def main() -> None:
         **selective_metrics,
         "top_confused_pairs": [list(pair) for pair in top_confused],
     }
-    config.CALIBRATION_RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with config.CALIBRATION_RESULTS_PATH.open("w") as f:
+    calibration_results_path.parent.mkdir(parents=True, exist_ok=True)
+    with calibration_results_path.open("w") as f:
         json.dump(results, f, indent=2)
-    print(f"\nSaved calibration results to {config.CALIBRATION_RESULTS_PATH}")
+    print(f"\nSaved calibration results to {calibration_results_path}")
 
 
 if __name__ == "__main__":
